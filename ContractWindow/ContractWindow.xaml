@@ -1,0 +1,51 @@
+﻿<Window x:Class="ArrayOperations.ContractWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Контракт операции" Height="500" Width="600"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="20">
+                <TextBlock Text="Предусловие (Pre):" FontWeight="Bold" Margin="0,0,0,5"/>
+                <Border Background="#FFF5F5F5" Padding="10" Margin="0,0,0,15">
+                    <TextBlock Text="{Binding Precondition}" FontStyle="Italic" TextWrapping="Wrap"/>
+                </Border>
+
+                <TextBlock Text="Постусловие (Post):" FontWeight="Bold" Margin="0,0,0,5"/>
+                <Border Background="#FFF5F5F5" Padding="10" Margin="0,0,0,15">
+                    <TextBlock Text="{Binding Postcondition}" FontStyle="Italic" TextWrapping="Wrap"/>
+                </Border>
+
+                <TextBlock Text="Эффекты/Исключения:" FontWeight="Bold" Margin="0,0,0,5"/>
+                <Border Background="#FFF5F5F5" Padding="10" Margin="0,0,0,15">
+                    <TextBlock Text="{Binding Effects}" TextWrapping="Wrap"/>
+                </Border>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="✓ Валидный пример:" FontWeight="Bold" Foreground="Green"/>
+                        <Border Background="#FFE8F5E8" Padding="10" Margin="0,5,0,0">
+                            <TextBlock Text="{Binding ValidExample}" FontFamily="Consolas"/>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                        <TextBlock Text="✗ Невалидный пример:" FontWeight="Bold" Foreground="Red"/>
+                        <Border Background="#FFFBE9E9" Padding="10" Margin="0,5,0,0">
+                            <TextBlock Text="{Binding InvalidExample}" FontFamily="Consolas"/>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <Button Content="Закрыть" Click="CloseButton_Click" 
+                        HorizontalAlignment="Right" Width="100" Margin="0,20,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

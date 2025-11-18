@@ -1,0 +1,123 @@
+﻿<Window x:Class="ArrayOperations.HelpWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Справка - Операции с массивами" 
+        Height="500" Width="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="15,5"/>
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Padding="20">
+            <StackPanel>
+                <!-- Заголовок -->
+                <TextBlock Text="Справка по приложению" 
+                          FontSize="18" FontWeight="Bold" 
+                          Foreground="#FF007ACC"
+                          Margin="0,0,0,20"/>
+
+                <!-- Общее описание -->
+                <TextBlock Text="Приложение позволяет выполнять различные операции над массивами целых чисел."
+                          FontSize="14"/>
+
+                <!-- Разделы справки -->
+                <StackPanel Margin="0,20,0,0">
+                    <!-- Ввод данных -->
+                    <TextBlock Text="[1] Ввод данных:" FontWeight="Bold" FontSize="14"/>
+                    <TextBlock Text="• Вводите числа через запятую (например: 1, 2, 3, 4)"/>
+                    <TextBlock Text="• Пробелы между числами не важны"/>
+                    <TextBlock Text="• Поддерживаются отрицательные числа"/>
+                    <TextBlock Text="• Примеры корректного ввода: '1,2,3', '5, -2, 8', '10'"/>
+                </StackPanel>
+
+                <!-- Операции -->
+                <StackPanel Margin="0,20,0,0">
+                    <TextBlock Text="[2] Доступные операции:" FontWeight="Bold" FontSize="14"/>
+
+                    <Border Background="#FFF0F8FF" Padding="10" Margin="0,5,0,10">
+                        <StackPanel>
+                            <TextBlock Text="• Сортировка - упорядочивает массив по возрастанию" FontWeight="SemiBold"/>
+                            <TextBlock Text="  Предусловие: массив не должен быть пустым"/>
+                            <TextBlock Text="  Пример: [3, 1, 2] → [1, 2, 3]"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="#FFF0F8FF" Padding="10" Margin="0,5,0,10">
+                        <StackPanel>
+                            <TextBlock Text="• Максимум - находит наибольший элемент" FontWeight="SemiBold"/>
+                            <TextBlock Text="  Предусловие: массив не должен быть пустым"/>
+                            <TextBlock Text="  Пример: [3, 1, 5] → [5]"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="#FFF0F8FF" Padding="10" Margin="0,5,0,10">
+                        <StackPanel>
+                            <TextBlock Text="• Сумма - вычисляет сумму всех элементов" FontWeight="SemiBold"/>
+                            <TextBlock Text="  Предусловие: массив не должен быть null"/>
+                            <TextBlock Text="  Пример: [1, 2, 3] → [6]"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Индикаторы -->
+                <StackPanel Margin="0,20,0,0">
+                    <TextBlock Text="[3] Индикаторы условий:" FontWeight="Bold" FontSize="14"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                        <Border Width="16" Height="16" CornerRadius="8" Background="Green" Margin="0,0,10,0"/>
+                        <TextBlock Text="Зеленый - условие выполнено"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,5,0,10">
+                        <Border Width="16" Height="16" CornerRadius="8" Background="Red" Margin="0,0,10,0"/>
+                        <TextBlock Text="Красный - условие не выполнено"/>
+                    </StackPanel>
+
+                    <TextBlock Text="• Предусловие (Pre) - проверяется перед выполнением операции"/>
+                    <TextBlock Text="• Постусловие (Post) - проверяется после выполнения операции"/>
+                </StackPanel>
+
+                <!-- Контракты -->
+                <StackPanel Margin="0,20,0,0">
+                    <TextBlock Text="[4] Контракты операций:" FontWeight="Bold" FontSize="14"/>
+                    <TextBlock Text="Кнопка 'Показать контракт' открывает подробное описание:"/>
+                    <TextBlock Text="• Предусловия (требования к входным данным)"/>
+                    <TextBlock Text="• Постусловия (гарантии после выполнения)"/>
+                    <TextBlock Text="• Эффекты и возможные исключения"/>
+                    <TextBlock Text="• Примеры валидных и невалидных входных данных"/>
+                </StackPanel>
+
+                <!-- Советы -->
+                <StackPanel Margin="0,20,0,0">
+                    <TextBlock Text="[5] Советы:" FontWeight="Bold" FontSize="14"/>
+                    <TextBlock Text="• Всегда проверяйте индикатор предусловия перед выполнением"/>
+                    <TextBlock Text="• Исходный массив никогда не изменяется - возвращается новый"/>
+                    <TextBlock Text="• При ошибках читайте сообщения в статусной строке"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Кнопка закрытия -->
+        <Border Grid.Row="1" Background="#FFF5F5F5" Padding="10">
+            <Button Content="Закрыть" Click="CloseButton_Click" 
+                    HorizontalAlignment="Center" Width="100"
+                    Background="#FF007ACC" Foreground="White"/>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,62 @@
+﻿<Window x:Class="ArrayOperations.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Операции с массивами" Height="450" Width="800">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Список операций -->
+        <ListBox x:Name="OperationsList" 
+                 DisplayMemberPath="Name"
+                 BorderThickness="0,0,1,0"
+                 BorderBrush="LightGray"/>
+
+        <!-- Панель операции -->
+        <Border Grid.Column="1" Padding="20">
+            <StackPanel>
+                <TextBlock x:Name="DescriptionText" FontSize="16" Margin="0,0,0,20"/>
+
+                <TextBlock Text="Введите массив (через запятую):" Margin="0,0,0,5"/>
+                <TextBox x:Name="InputTextBox" Margin="0,0,0,10"/>
+
+                <Button x:Name="ExecuteButton" Content="Выполнить" 
+                        Margin="0,0,0,20" HorizontalAlignment="Left" Padding="20,5"/>
+
+                <!-- Индикаторы -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <Border x:Name="PreIndicator" Width="20" Height="20" CornerRadius="10" 
+                            Background="Red" Margin="0,0,10,0"/>
+                    <TextBlock x:Name="PreText" Text="Предусловие: не выполнено"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                    <Border x:Name="PostIndicator" Width="20" Height="20" CornerRadius="10" 
+                            Background="Red" Margin="0,0,10,0"/>
+                    <TextBlock x:Name="PostText" Text="Постусловие: не выполнено"/>
+                </StackPanel>
+
+                <TextBlock Text="Результат:" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBlock x:Name="ResultText" Margin="0,0,0,10"/>
+
+                <TextBlock x:Name="StatusText" Foreground="Gray"/>
+
+                <Button x:Name="ContractButton" Content="Показать контракт" 
+                        Margin="0,20,0,0" HorizontalAlignment="Left"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Упрощенная кнопка справки -->
+        <Button x:Name="HelpButton" Content="?" 
+                Width="35" Height="35" 
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="10" FontSize="16" FontWeight="Bold"
+                Background="#FF007ACC" Foreground="White"
+                BorderThickness="0"
+                ToolTip="Справка по приложению"
+                Click="HelpButton_Click"/>
+    </Grid>
+</Window>
