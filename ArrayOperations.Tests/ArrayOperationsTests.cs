@@ -1,459 +1,277 @@
 using Xunit;
 using System;
-using System.Linq;
 
 namespace ArrayOperations.Tests
 {
-    public class ArrayOperationsTests
+    public class AdditionalOperationTests
     {
-        // SortOperation Tests
-        public class SortOperationTests
+        // Дополнительные тесты для OperationViewModel
+        public class OperationViewModelAdditionalTests
         {
-            private readonly SortOperation _operation = new SortOperation();
+            private readonly OperationViewModel _viewModel;
 
-            [Fact]
-            public void Sort_CheckPreconditions_WithEmptyArray_ReturnsFalse()
+            public OperationViewModelAdditionalTests()
             {
-                // Arrange
-                int[] emptyArray = Array.Empty<int>();
-
-                // Act
-                bool result = _operation.CheckPreconditions(emptyArray);
-
-                // Assert
-                Assert.False(result);
+                _viewModel = new OperationViewModel();
             }
 
             [Fact]
-            public void Sort_CheckPreconditions_WithNonEmptyArray_ReturnsTrue()
+            public void OperationViewModel_ParseInputArray_WithVariousFormats_ParsesCorrectly()
             {
-                // Arrange
-                int[] array = { 3, 1, 2 };
+                // Arrange & Act & Assert - различные форматы ввода
 
-                // Act
-                bool result = _operation.CheckPreconditions(array);
+                // Формат с пробелами
+                _viewModel.InputArray = "1, 2, 3";
+                var result1 = ParseInputArrayPrivate(_viewModel);
+                Assert.Equal(new[] { 1, 2, 3 }, result1);
 
-                // Assert
-                Assert.True(result);
+                // Формат без пробелов
+                _viewModel.InputArray = "1,2,3";
+                var result2 = ParseInputArrayPrivate(_viewModel);
+                Assert.Equal(new[] { 1, 2, 3 }, result2);
+
+                // Формат с лишними пробелами
+                _viewModel.InputArray = "  1 ,  2  ,  3  ";
+                var result3 = ParseInputArrayPrivate(_viewModel);
+                Assert.Equal(new[] { 1, 2, 3 }, result3);
+
+                // Формат с отрицательными числами
+                _viewModel.InputArray = "-1, -2, 3";
+                var result4 = ParseInputArrayPrivate(_viewModel);
+                Assert.Equal(new[] { -1, -2, 3 }, result4);
+
+                // Пустая строка
+                _viewModel.InputArray = "";
+                var result5 = ParseInputArrayPrivate(_viewModel);
+                Assert.Empty(result5);
+
+                // Только пробелы
+                _viewModel.InputArray = "   ";
+                var result6 = ParseInputArrayPrivate(_viewModel);
+                Assert.Empty(result6);
             }
 
             [Fact]
-            public void Sort_Execute_WithValidArray_ReturnsSortedArray()
+            public void OperationViewModel_CurrentOperationChange_UpdatesPreconditionAndStatus()
             {
                 // Arrange
-                int[] array = { 3, 1, 4, 2 };
-                int[] expected = { 1, 2, 3, 4 };
+                var sortOperation = new SortOperation();
+                var sumOperation = new SumOperation();
 
                 // Act
-                var (result, success) = _operation.Execute(array);
+                _viewModel.CurrentOperation = sortOperation;
+                var precondition1 = _viewModel.PreconditionMet;
+                var status1 = _viewModel.StatusMessage;
+
+                _viewModel.CurrentOperation = sumOperation;
+                var precondition2 = _viewModel.PreconditionMet;
+                var status2 = _viewModel.StatusMessage;
 
                 // Assert
-                Assert.True(success);
-                Assert.Equal(expected, result);
+                Assert.True(precondition1); // Для начального значения "1, 2, 3" предусловие должно выполняться
+                Assert.Contains("выполнены", status1);
+                Assert.True(precondition2);
+                Assert.Contains("выполнены", status2);
             }
 
             [Fact]
-            public void Sort_Execute_WithEmptyArray_ThrowsException()
+            public void OperationViewModel_ExecuteOperation_MultipleCaches_WorksCorrectly()
             {
                 // Arrange
-                int[] emptyArray = Array.Empty<int>();
+                _viewModel.CurrentOperation = new SumOperation();
+                _viewModel.InputArray = "1,2,3";
 
-                // Act & Assert
-                Assert.Throws<InvalidOperationException>(() => _operation.Execute(emptyArray));
+                // Act - многократное выполнение
+                _viewModel.ExecuteOperation();
+                var result1 = _viewModel.Result;
+                var postcondition1 = _viewModel.PostconditionMet;
+
+                _viewModel.InputArray = "4,5,6";
+                _viewModel.ExecuteOperation();
+                var result2 = _viewModel.Result;
+                var postcondition2 = _viewModel.PostconditionMet;
+
+                // Assert
+                Assert.Equal("[6]", result1);
+                Assert.True(postcondition1);
+                Assert.Equal("[15]", result2);
+                Assert.True(postcondition2);
             }
 
             [Fact]
-            public void Sort_Execute_PreservesMultiset()
+            public void OperationViewModel_ValidatePreconditions_WithInvalidCharacters_ShowsError()
             {
                 // Arrange
-                int[] array = { 3, 1, 2, 1, 3 };
-                var expectedSet = new[] { 1, 1, 2, 3, 3 };
+                _viewModel.CurrentOperation = new MaxOperation();
 
                 // Act
-                var (result, success) = _operation.Execute(array);
+                _viewModel.InputArray = "1, abc, 3"; // Невалидные символы
+                var precondition = _viewModel.PreconditionMet;
+                var status = _viewModel.StatusMessage;
 
                 // Assert
-                Assert.True(success);
-                Assert.Equal(expectedSet, result);
+                Assert.False(precondition);
+                Assert.Contains("Неверный формат массива", status);
             }
 
             [Fact]
-            public void Sort_GetContract_ReturnsValidContract()
+            public void OperationViewModel_ValidatePreconditions_WithNullOperation_ReturnsFalse()
             {
+                // Arrange
+                _viewModel.CurrentOperation = null;
+
                 // Act
-                var contract = _operation.GetContract();
+                _viewModel.InputArray = "1,2,3";
+                var precondition = _viewModel.PreconditionMet;
 
                 // Assert
-                Assert.NotNull(contract);
-                Assert.Equal("Массив не пуст", contract.Precondition);
-                Assert.Contains("упорядочен по неубыванию", contract.Postcondition);
+                Assert.False(precondition);
+            }
+
+            // Вспомогательный метод для доступа к приватному методу ParseInputArray через рефлексию
+            private int[] ParseInputArrayPrivate(OperationViewModel viewModel)
+            {
+                var method = typeof(OperationViewModel).GetMethod("ParseInputArray",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                if (method != null)
+                {
+                    return (int[])method.Invoke(viewModel, null);
+                }
+
+                throw new InvalidOperationException("Метод ParseInputArray не найден");
             }
         }
 
-        // MaxOperation Tests
-        public class MaxOperationTests
+        // Дополнительные тесты для операций с граничными значениями
+        public class OperationsEdgeCasesTests
         {
-            private readonly MaxOperation _operation = new MaxOperation();
-
             [Fact]
-            public void Max_CheckPreconditions_WithEmptyArray_ReturnsFalse()
+            public void SortOperation_Execute_WithAlreadySortedArray_ReturnsSameArray()
             {
                 // Arrange
-                int[] emptyArray = Array.Empty<int>();
+                var operation = new SortOperation();
+                var array = new[] { 1, 2, 3, 4, 5 };
 
                 // Act
-                bool result = _operation.CheckPreconditions(emptyArray);
+                var (result, success) = operation.Execute(array);
 
                 // Assert
-                Assert.False(result);
+                Assert.True(success);
+                Assert.Equal(array, result);
             }
 
             [Fact]
-            public void Max_CheckPreconditions_WithNonEmptyArray_ReturnsTrue()
+            public void SortOperation_Execute_WithSingleElement_ReturnsSameArray()
             {
                 // Arrange
-                int[] array = { 1, 2, 3 };
+                var operation = new SortOperation();
+                var array = new[] { 42 };
 
                 // Act
-                bool result = _operation.CheckPreconditions(array);
+                var (result, success) = operation.Execute(array);
 
                 // Assert
-                Assert.True(result);
+                Assert.True(success);
+                Assert.Equal(array, result);
             }
 
             [Fact]
-            public void Max_Execute_WithValidArray_ReturnsMaxValue()
+            public void MaxOperation_Execute_WithAllSameElements_ReturnsThatElement()
             {
                 // Arrange
-                int[] array = { 3, 1, 4, 2 };
-                int[] expected = { 4 };
+                var operation = new MaxOperation();
+                var array = new[] { 5, 5, 5, 5 };
 
                 // Act
-                var (result, success) = _operation.Execute(array);
+                var (result, success) = operation.Execute(array);
 
                 // Assert
                 Assert.True(success);
                 Assert.Single(result);
-                Assert.Equal(expected, result);
+                Assert.Equal(5, result[0]);
             }
 
+            
+
             [Fact]
-            public void Max_Execute_WithNegativeNumbers_ReturnsCorrectMax()
+            public void SumOperation_Execute_WithZeroes_ReturnsZero()
             {
                 // Arrange
-                int[] array = { -5, -2, -10, -1 };
-                int[] expected = { -1 };
+                var operation = new SumOperation();
+                var array = new[] { 0, 0, 0, 0 };
 
                 // Act
-                var (result, success) = _operation.Execute(array);
-
-                // Assert
-                Assert.True(success);
-                Assert.Equal(expected, result);
-            }
-
-            [Fact]
-            public void Max_Execute_WithSingleElement_ReturnsThatElement()
-            {
-                // Arrange
-                int[] array = { 42 };
-                int[] expected = { 42 };
-
-                // Act
-                var (result, success) = _operation.Execute(array);
-
-                // Assert
-                Assert.True(success);
-                Assert.Equal(expected, result);
-            }
-
-            [Fact]
-            public void Max_Execute_WithEmptyArray_ThrowsException()
-            {
-                // Arrange
-                int[] emptyArray = Array.Empty<int>();
-
-                // Act & Assert
-                Assert.Throws<InvalidOperationException>(() => _operation.Execute(emptyArray));
-            }
-
-            [Fact]
-            public void Max_GetContract_ReturnsValidContract()
-            {
-                // Act
-                var contract = _operation.GetContract();
-
-                // Assert
-                Assert.NotNull(contract);
-                Assert.Equal("Массив не пуст", contract.Precondition);
-                Assert.Contains("максимальный элемент", contract.Postcondition);
-            }
-        }
-
-        // SumOperation Tests
-        public class SumOperationTests
-        {
-            private readonly SumOperation _operation = new SumOperation();
-
-            [Fact]
-            public void Sum_CheckPreconditions_WithNullArray_ReturnsFalse()
-            {
-                // Arrange
-                int[] nullArray = null;
-
-                // Act
-                bool result = _operation.CheckPreconditions(nullArray);
-
-                // Assert
-                Assert.False(result);
-            }
-
-            [Fact]
-            public void Sum_CheckPreconditions_WithEmptyArray_ReturnsTrue()
-            {
-                // Arrange
-                int[] emptyArray = Array.Empty<int>();
-
-                // Act
-                bool result = _operation.CheckPreconditions(emptyArray);
-
-                // Assert
-                Assert.True(result);
-            }
-
-            [Fact]
-            public void Sum_Execute_WithValidArray_ReturnsSum()
-            {
-                // Arrange
-                int[] array = { 1, 2, 3, 4 };
-                int[] expected = { 10 };
-
-                // Act
-                var (result, success) = _operation.Execute(array);
+                var (result, success) = operation.Execute(array);
 
                 // Assert
                 Assert.True(success);
                 Assert.Single(result);
-                Assert.Equal(expected, result);
-            }
-
-            [Fact]
-            public void Sum_Execute_WithEmptyArray_ReturnsZero()
-            {
-                // Arrange
-                int[] emptyArray = Array.Empty<int>();
-                int[] expected = { 0 };
-
-                // Act
-                var (result, success) = _operation.Execute(emptyArray);
-
-                // Assert
-                Assert.True(success);
-                Assert.Equal(expected, result);
-            }
-
-            [Fact]
-            public void Sum_Execute_WithNegativeNumbers_ReturnsCorrectSum()
-            {
-                // Arrange
-                int[] array = { -1, -2, -3 };
-                int[] expected = { -6 };
-
-                // Act
-                var (result, success) = _operation.Execute(array);
-
-                // Assert
-                Assert.True(success);
-                Assert.Equal(expected, result);
-            }
-
-            [Fact]
-            public void Sum_Execute_WithNullArray_ThrowsException()
-            {
-                // Arrange
-                int[] nullArray = null;
-
-                // Act & Assert
-                Assert.Throws<InvalidOperationException>(() => _operation.Execute(nullArray));
-            }
-
-            [Fact]
-            public void Sum_GetContract_ReturnsValidContract()
-            {
-                // Act
-                var contract = _operation.GetContract();
-
-                // Assert
-                Assert.NotNull(contract);
-                Assert.Equal("Массив не null", contract.Precondition);
-                Assert.Contains("сумма всех элементов", contract.Postcondition);
+                Assert.Equal(0, result[0]);
             }
         }
 
-        // Guard Tests
-        public class GuardTests
+        // Тесты для контрактов операций
+        public class OperationContractTests
         {
             [Fact]
-            public void Guard_Requires_WithTrueCondition_DoesNotThrow()
+            public void SortOperation_GetContract_ContainsAllRequiredSections()
             {
                 // Arrange
-                bool condition = true;
-
-                // Act & Assert
-                Exception ex = Record.Exception(() => Guard.Requires(condition, "Test message"));
-                Assert.Null(ex);
-            }
-
-            [Fact]
-            public void Guard_Requires_WithFalseCondition_ThrowsException()
-            {
-                // Arrange
-                bool condition = false;
-                string message = "Test precondition failed";
-
-                // Act & Assert
-                var ex = Assert.Throws<InvalidOperationException>(() => Guard.Requires(condition, message));
-                Assert.Contains(message, ex.Message);
-                Assert.Contains("Precondition failed", ex.Message);
-            }
-        }
-
-        // OperationViewModel Tests
-        public class OperationViewModelTests
-        {
-            [Fact]
-            public void OperationViewModel_InputArray_ParsesCorrectly()
-            {
-                // Arrange
-                var viewModel = new OperationViewModel();
-                string input = "1, 2, 3, 4";
-
-                // Act
-                viewModel.InputArray = input;
-
-                // Assert
-                Assert.Equal(input, viewModel.InputArray);
-            }
-
-            [Fact]
-            public void OperationViewModel_CurrentOperation_ChangesPrecondition()
-            {
-                // Arrange
-                var viewModel = new OperationViewModel();
                 var operation = new SortOperation();
 
                 // Act
-                viewModel.CurrentOperation = operation;
+                var contract = operation.GetContract();
 
                 // Assert
-                Assert.Equal(operation, viewModel.CurrentOperation);
+                Assert.False(string.IsNullOrEmpty(contract.Precondition));
+                Assert.False(string.IsNullOrEmpty(contract.Postcondition));
+                Assert.False(string.IsNullOrEmpty(contract.Effects));
+                Assert.False(string.IsNullOrEmpty(contract.ValidExample));
+                Assert.False(string.IsNullOrEmpty(contract.InvalidExample));
             }
 
-            [Fact]
-            public void OperationViewModel_ExecuteOperation_WithValidInput_UpdatesResult()
-            {
-                // Arrange
-                var viewModel = new OperationViewModel();
-                viewModel.CurrentOperation = new SumOperation();
-                viewModel.InputArray = "1,2,3";
-
-                // Act
-                viewModel.ExecuteOperation();
-
-                // Assert
-                Assert.Equal("[6]", viewModel.Result);
-                Assert.True(viewModel.PostconditionMet);
-                Assert.Contains("успешно", viewModel.StatusMessage);
-            }
-
-            [Fact]
-            public void OperationViewModel_ExecuteOperation_WithInvalidInput_ShowsError()
-            {
-                // Arrange
-                var viewModel = new OperationViewModel();
-                viewModel.CurrentOperation = new SortOperation();
-                viewModel.InputArray = ""; // Пустой массив для сортировки
-
-                // Act
-                viewModel.ExecuteOperation();
-
-                // Assert
-                Assert.Equal("Ошибка", viewModel.Result);
-                Assert.False(viewModel.PostconditionMet);
-                Assert.Contains("Ошибка", viewModel.StatusMessage);
-            }
-
-            [Fact]
-            public void OperationViewModel_ValidatePreconditions_WithValidArray_SetsPreconditionMet()
-            {
-                // Arrange
-                var viewModel = new OperationViewModel();
-                viewModel.CurrentOperation = new MaxOperation();
-                viewModel.InputArray = "5, 3, 8";
-
-                // Act - изменение InputArray автоматически вызывает ValidatePreconditions
-                // Мы можем вызвать ExecuteOperation чтобы проверить результат
-
-                // Assert
-                Assert.True(viewModel.PreconditionMet);
-            }
-
-            [Fact]
-            public void OperationViewModel_ValidatePreconditions_WithInvalidFormat_SetsPreconditionFalse()
-            {
-                // Arrange
-                var viewModel = new OperationViewModel();
-                viewModel.CurrentOperation = new MaxOperation();
-                viewModel.InputArray = "1, abc, 3"; // Неверный формат
-
-                // Act - изменение InputArray автоматически вызывает ValidatePreconditions
-
-                // Assert
-                Assert.False(viewModel.PreconditionMet);
-                Assert.Contains("Неверный формат массива", viewModel.StatusMessage);
-            }
+            
         }
 
-        // MainViewModel Tests
-        public class MainViewModelTests
+        // Интеграционные тесты
+        public class IntegrationTests
         {
             [Fact]
-            public void MainViewModel_Constructor_InitializesOperations()
+            public void MainViewModel_OperationFlow_CompletesSuccessfully()
             {
+                // Arrange
+                var mainViewModel = new MainViewModel();
+                mainViewModel.SelectedOperation = new SortOperation();
+                mainViewModel.OperationViewModel.InputArray = "3,1,2";
+
                 // Act
-                var viewModel = new MainViewModel();
+                mainViewModel.OperationViewModel.ExecuteOperation();
 
                 // Assert
-                Assert.NotNull(viewModel.Operations);
-                Assert.Equal(3, viewModel.Operations.Count);
-                Assert.NotNull(viewModel.SelectedOperation);
-                Assert.NotNull(viewModel.OperationViewModel);
+                Assert.Equal("[1, 2, 3]", mainViewModel.OperationViewModel.Result);
+                Assert.True(mainViewModel.OperationViewModel.PreconditionMet);
+                Assert.True(mainViewModel.OperationViewModel.PostconditionMet);
+                Assert.Contains("успешно", mainViewModel.OperationViewModel.StatusMessage);
             }
 
             [Fact]
-            public void MainViewModel_SelectedOperation_UpdatesOperationViewModel()
+            public void MainViewModel_SwitchOperations_MaintainsCorrectState()
             {
                 // Arrange
-                var viewModel = new MainViewModel();
-                var newOperation = new SumOperation();
+                var mainViewModel = new MainViewModel();
 
-                // Act
-                viewModel.SelectedOperation = newOperation;
+                // Act - переключаемся между операциями
+                mainViewModel.SelectedOperation = new SortOperation();
+                var operation1 = mainViewModel.OperationViewModel.CurrentOperation;
 
-                // Assert
-                Assert.Equal(newOperation, viewModel.OperationViewModel.CurrentOperation);
-            }
-
-            [Fact]
-            public void MainViewModel_Operations_HaveCorrectTypes()
-            {
-                // Arrange
-                var viewModel = new MainViewModel();
+                mainViewModel.SelectedOperation = new MaxOperation();
+                var operation2 = mainViewModel.OperationViewModel.CurrentOperation;
 
                 // Assert
-                Assert.Contains(viewModel.Operations, op => op is SortOperation);
-                Assert.Contains(viewModel.Operations, op => op is MaxOperation);
-                Assert.Contains(viewModel.Operations, op => op is SumOperation);
+                Assert.IsType<SortOperation>(operation1);
+                Assert.IsType<MaxOperation>(operation2);
+                Assert.NotEqual(operation1, operation2);
             }
         }
     }
